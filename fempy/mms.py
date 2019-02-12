@@ -217,17 +217,21 @@ def verify_temporal_order_of_accuracy(
         
         model.time.assign(starttime)
         
+        
         if (type(model.initial_values) == type((0,)) or
                 (type(model.initial_values) == type([0,]))):
         
             for i, iv in enumerate(model.initial_values):
             
                 iv.assign(initial_values[i])
+                
+            model.solution.assign(model.initial_values[0])
+            
         else:
         
             model.initial_values.assign(initial_values[0])
             
-        model.solution.assign(model.initial_values[0])
+            model.solution.assign(model.initial_values)
         
         model.run(endtime = endtime, plot = plot_solution)
             
