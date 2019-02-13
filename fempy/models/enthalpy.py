@@ -1,6 +1,7 @@
 """ An enthalpy model class for melting and solidification """
 import firedrake as fe
 import fempy.unsteady_model
+from matplotlib import pyplot as plt
 
     
 class Model(fempy.unsteady_model.Model):
@@ -18,6 +19,10 @@ class Model(fempy.unsteady_model.Model):
     def init_element(self):
     
         self.element = fe.FiniteElement("P", self.mesh.ufl_cell(), 1)
+        
+    def init_integration_measure(self):
+
+        self.integration_measure = fe.dx(degree = 4)
         
     def porosity(self, T):
         
@@ -64,4 +69,42 @@ class Model(fempy.unsteady_model.Model):
         
         self.solver = fe.NonlinearVariationalSolver(
             self.problem, solver_parameters = solver_parameters)
+            
+    def plot(self):
+    
+        V = self.function_space
+        
+        T = self.solution
+        
+        phil = fe.interpolate(self.porosity(T), V)
+        
+        timestr = str(self.time.__float__())
+        
+        for f, label, filename in zip(
+                (T, phil),
+                ("T", "\\phi_l"),
+                ("T", "phil")):
+            
+            fe.plot(f)
+            
+            plt.axis("square")
+        
+            plt.xlabel(r"$x$")
+
+            plt.ylabel(r"$y$")
+
+            plt.title(r"$" + label + 
+                ", t = " + timestr + "$")
+            
+            self.output_directory_path.mkdir(
+                parents = True, exist_ok = True)
+        
+            filepath = self.output_directory_path.joinpath(filename + 
+                "_t" + timestr.replace(".", "p")).with_suffix(".png")
+            
+            print("Writing plot to " + str(filepath))
+            
+            plt.savefig(str(filepath))
+            
+            plt.close()
     

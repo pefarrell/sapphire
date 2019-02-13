@@ -27,6 +27,8 @@ class Model(fempy.model.Model):
         
         self.initial_values = fe.Function(self.function_space)
         
+        self.update_initial_values()
+        
     def init_solution(self):
     
         super().init_solution()

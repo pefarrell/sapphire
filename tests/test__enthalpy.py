@@ -1,6 +1,7 @@
 import firedrake as fe 
 import fempy.mms
 import fempy.models.enthalpy
+import fempy.benchmarks.stefan_problem
 
 
 class VerifiableModel(fempy.models.enthalpy.Model):
@@ -147,4 +148,24 @@ def test__verify_temporal_convergence_order_via_mms__bdf2(
         tolerance = tolerance,
         plot_errors = plot_errors,
         plot_solution = plot_solution)
+    
+    
+def test__stefan_problem__melting_octadecane():
+
+    model = fempy.benchmarks.stefan_problem.Model(meshsize = 64)
+    
+    model.stefan_number.assign(0.045)
+    
+    model.hot_wall_temperature.assign(1.)
+    
+    model.cold_wall_temperature.assign(-0.01)
+    
+    model.timestep_size.assign(1.)
+    
+    model.smoothing.assign(1./200.)
+    
+    model.output_directory_path = \
+            model.output_directory_path.joinpath("melting_octadecane/")
+    
+    model.run(endtime = 80., plot = True)
     
