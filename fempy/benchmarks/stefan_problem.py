@@ -43,15 +43,3 @@ class Model(fempy.models.enthalpy.Model):
             fe.DirichletBC(V, self.hot_wall_temperature, 1),
             fe.DirichletBC(V, self.cold_wall_temperature, 2)]
             
-    def run_and_plot(self, endtime):
-        
-        output_prefix = self.output_prefix
-        
-        while self.time.__float__() < (endtime - self.time_tolerance):
-        
-            self.run(endtime = self.time.__float__() + self.timestep_size.__float__())
-            
-            self.output_prefix = output_prefix + "t" + str(self.time.__float__()) + "_"
-            
-            self.plot(save = True, show = False)
-            
