@@ -101,15 +101,3 @@ class ModelWithDarcyResistance(
             self.function_space)
             
         self.initial_values.assign(initial_values)
-        
-        
-if __name__ == "__main__":
-    
-    model = Model(meshsize = 32)
-    
-    model.timestep_size.assign(10.)
-    
-    model.latent_heat_smoothing.assign(1./256.)
-    
-    model.run(endtime = 70., plot = True)
-    
