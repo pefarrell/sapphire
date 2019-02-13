@@ -152,7 +152,7 @@ def test__verify_temporal_convergence_order_via_mms__bdf2(
     
 def test__stefan_problem__melting_octadecane():
 
-    model = fempy.benchmarks.stefan_problem.Model(meshsize = 64)
+    model = fempy.benchmarks.stefan_problem.Model(meshsize = 16)
     
     model.stefan_number.assign(0.045)
     
@@ -167,5 +167,5 @@ def test__stefan_problem__melting_octadecane():
     model.output_directory_path = \
             model.output_directory_path.joinpath("melting_octadecane/")
     
-    model.run(endtime = 80., plot = True)
+    model.run(endtime = 3., plot = True)
     
