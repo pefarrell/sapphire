@@ -16,7 +16,7 @@ def solve(
     
     Parameters
     ----------
-    variational_form_residual : ufl.Form
+    variational_form_residual : fe.Form
     
     solution : fe.Function
     
@@ -26,6 +26,7 @@ def solve(
     
     Examples
     --------
+    a) Solve a nonlinear diffusion problem.
     >>> import firedrake as fe
     >>> from fempy.model import solve
     >>> mesh = fe.UnitIntervalMesh(2)
@@ -41,8 +42,10 @@ def solve(
     >>> s = 10.*sin(pi*x)
     >>> F = (-dot(grad(v), alpha*grad(u)) - v*s)*dx
     >>> u, its = solve(F, u, bc)
+    >>> print("Solved in {0} iterations.".format(its))
+    >>> print("u = {0}".format(u.vector().array()))
+    u = [ 0.         -1.07046388  0.        ]
     """
-    
     problem = fe.NonlinearVariationalProblem(
         F = variational_form_residual,
         u = solution,
