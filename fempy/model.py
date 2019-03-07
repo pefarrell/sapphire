@@ -13,38 +13,6 @@ def solve(
         solver_parameters = None):
     """ Solve the problem defined by the form and boundary conditions,
     first by constructing the problem and solver on demand.
-    
-    Parameters
-    ----------
-    variational_form_residual : fe.Form
-    
-    solution : fe.Function
-    
-    dirichlet_bcs : fe.DirichletBC or list/tuple of them, optional
-    
-    solver_parameters : dict, optional
-    
-    Examples
-    --------
-    a) Solve a nonlinear diffusion problem.
-    >>> import firedrake as fe
-    >>> from fempy.model import solve
-    >>> mesh = fe.UnitIntervalMesh(2)
-    >>> P1 = fe.FiniteElement("P", mesh.ufl_cell(), 1)
-    >>> V = fe.FunctionSpace(mesh, P1)
-    >>> u = fe.Function(V)
-    >>> v = fe.TestFunction(V)
-    >>> bc = fe.DirichletBC(V, 0., "on_boundary")
-    >>> alpha = 1 + u/10.
-    >>> x = fe.SpatialCoordinate(mesh)[0]
-    >>> div, grad, dot, sin, pi = fe.div, fe.grad, fe.dot, fe.sin, fe.pi
-    >>> dx = fe.dx
-    >>> s = 10.*sin(pi*x)
-    >>> F = (-dot(grad(v), alpha*grad(u)) - v*s)*dx
-    >>> u, its = solve(F, u, bc)
-    >>> print("Solved in {0} iterations.".format(its))
-    >>> print("u = {0}".format(u.vector().array()))
-    u = [ 0.         -1.07046388  0.        ]
     """
     problem = fe.NonlinearVariationalProblem(
         F = variational_form_residual,
@@ -56,7 +24,7 @@ def solve(
         problem = problem,
         solver_parameters = solver_parameters)
         
-    solver.solve()
+    solver.solve()  # This mutates `solution`
     
     return solution, solver.snes.getIterationNumber()
     
@@ -73,7 +41,6 @@ class Model(object):
             dirichlet_bcs,
             initial_values,
             quadrature_degree = None,
-            time_dependent = True,
             time_stencil_size = 2):
         
         self.mesh = mesh
@@ -89,21 +56,13 @@ class Model(object):
             
         self.solution = self.solutions[0]
         
-        if time_dependent:
-            
-            assert(time_stencil_size > 1)
+        if time_stencil_size > 1:
             
             self.time = fe.Constant(0.)
             
             self.timestep_size = fe.Constant(1.)
             
             self.time_tolerance = 1.e-8
-            
-        else:
-        
-            warn()
-        
-            time_stencil_size = 1
             
         self.initial_values = initial_values(model = self)
         
