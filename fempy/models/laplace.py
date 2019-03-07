@@ -39,7 +39,7 @@ class Model(fempy.model.Model):
             element = element(
                 cell = mesh.ufl_cell(), degree = element_degree),
             variational_form_residual = variational_form_residual,
-            time_dependent = False,
+            time_stencil_size = 1,
             **kwargs)
     
     def solve(self, *args, **kwargs):
