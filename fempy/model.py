@@ -1,7 +1,7 @@
-""" Contains the Model class """
-import firedrake as fe
+""" Provides the base class for all models """
+import warnings
 import pathlib
-import matplotlib.pyplot as plt
+import firedrake as fe
 import fempy.time_discretization
 import fempy.output
 
@@ -9,24 +9,49 @@ import fempy.output
 def solve(
         variational_form_residual,
         solution,
-        dirichlet_boundary_conditions,
-        parameters = {
-            "snes_type": "newtonls",
-            "snes_monitor": True,
-            "ksp_type": "preonly", 
-            "pc_type": "lu", 
-            "mat_type": "aij",
-            "pc_factor_mat_solver_type": "mumps"}):
-
+        dirichlet_bcs = None,
+        solver_parameters = None):
+    """ Solve the problem defined by the form and boundary conditions,
+    first by constructing the problem and solver on demand.
+    
+    Parameters
+    ----------
+    variational_form_residual : ufl.Form
+    
+    solution : fe.Function
+    
+    dirichlet_bcs : fe.DirichletBC or list/tuple of them, optional
+    
+    solver_parameters : dict, optional
+    
+    Examples
+    --------
+    >>> import firedrake as fe
+    >>> from fempy.model import solve
+    >>> mesh = fe.UnitIntervalMesh(2)
+    >>> P1 = fe.FiniteElement("P", mesh.ufl_cell(), 1)
+    >>> V = fe.FunctionSpace(mesh, P1)
+    >>> u = fe.Function(V)
+    >>> v = fe.TestFunction(V)
+    >>> bc = fe.DirichletBC(V, 0., "on_boundary")
+    >>> alpha = 1 + u/10.
+    >>> x = fe.SpatialCoordinate(mesh)[0]
+    >>> div, grad, dot, sin, pi = fe.div, fe.grad, fe.dot, fe.sin, fe.pi
+    >>> dx = fe.dx
+    >>> s = 10.*sin(pi*x)
+    >>> F = (-dot(grad(v), alpha*grad(u)) - v*s)*dx
+    >>> u, its = solve(F, u, bc)
+    """
+    
     problem = fe.NonlinearVariationalProblem(
         F = variational_form_residual,
         u = solution,
-        bcs = dirichlet_boundary_conditions,
+        bcs = dirichlet_bcs,
         J = fe.derivative(variational_form_residual, solution))
         
     solver = fe.NonlinearVariationalSolver(
         problem = problem,
-        solver_parameters = parameters)
+        solver_parameters = solver_parameters)
         
     solver.solve()
     
@@ -34,12 +59,15 @@ def solve(
     
     
 class Model(object):
-    """ A class on which to base finite element models """
+    """ A PDE-based model for time-dependent simulations,
+    discretized in space with mixed finite elements 
+    and in time with finite differences.
+    """
     def __init__(self, 
             mesh, 
             element, 
             variational_form_residual,
-            dirichlet_boundary_conditions,
+            dirichlet_bcs,
             initial_values,
             quadrature_degree = None,
             time_dependent = True,
@@ -53,7 +81,6 @@ class Model(object):
         
         self.quadrature_degree = quadrature_degree
         
-        """ Time dependence """
         self.solutions = [fe.Function(self.function_space) 
             for i in range(time_stencil_size)]
             
@@ -69,21 +96,25 @@ class Model(object):
             
             self.time_tolerance = 1.e-8
             
+        else:
+        
+            warn()
+        
+            time_stencil_size = 1
+            
         self.initial_values = initial_values(model = self)
         
         for solution in self.solutions:
         
             solution.assign(self.initial_values)
         
-        """ Construct the variational problem and solver """
         self.variational_form_residual = variational_form_residual(
                 model = self,
                 solution = self.solution)
                 
-        self.dirichlet_boundary_conditions = \
-            dirichlet_boundary_conditions(model = self)
+        self.dirichlet_bcs = \
+            dirichlet_bcs(model = self)
         
-        """ Output """
         self.output_directory_path = pathlib.Path("output/")
         
         self.snes_iteration_count = 0
@@ -93,8 +124,8 @@ class Model(object):
         self.solution, snes_iteration_count = solve(*args,
             variational_form_residual = self.variational_form_residual,
             solution = self.solution,
-            dirichlet_boundary_conditions = \
-                self.dirichlet_boundary_conditions,
+            dirichlet_bcs = \
+                self.dirichlet_bcs,
             **kwargs)
            
         self.snes_iteration_count += snes_iteration_count
