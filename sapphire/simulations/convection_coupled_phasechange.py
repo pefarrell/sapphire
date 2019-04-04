@@ -328,10 +328,14 @@ class Simulation(sapphire.simulation.Simulation):
                
         return self.solution
     
-    def run(self, *args, **kwargs):
+    def run(self, *args, solve = None, **kwargs):
         
+        if solve is None:
+        
+            solve = self.solve_with_auto_smoothing
+            
         return super().run(*args,
-            solve = self.solve_with_auto_smoothing,
+            solve = solve,
             **kwargs)
            
     def postprocess(self):

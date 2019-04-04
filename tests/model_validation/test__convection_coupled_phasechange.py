@@ -7,7 +7,15 @@ import sapphire.test
 
 datadir = sapphire.test.datadir
 
-def test__validate__melt_octadecane__regression():
+OctadecaneMeltingSimulation = sapphire.benchmarks.\
+    melt_octadecane_in_cavity.Simulation
+
+    
+def melt_octadecane(Simulation = None):
+
+    if Simulation is None:
+    
+        Simulation = OctadecaneMeltingSimulation
     
     tf = 80.
     
@@ -39,7 +47,7 @@ def test__validate__melt_octadecane__regression():
     tolerance = 0.01
     
     
-    sim = sapphire.benchmarks.melt_octadecane_in_cavity.Simulation(
+    sim = Simulation(
         quadrature_degree = q,
         element_degree = rx - 1,
         time_stencil_size = rt + 1,
@@ -70,9 +78,48 @@ def test__validate__melt_octadecane__regression():
     
     print("Liquid area = {0}".format(sim.liquid_area))
     
-    assert(abs(sim.liquid_area - expected_liquid_area) < tolerance)
+    assert(abs(sim.liquid_area - expected_liquid_area) < tolerance)    
+    
+    
+def test__validate__melt_octadecane__regression():
+    
+    melt_octadecane()
     
 
+class OctadecaneMeltingSimulationWithoutAutoSmoothing(
+        OctadecaneMeltingSimulation):
+    
+    def solve(self, *args, **kwargs):
+    
+        return sapphire.simulation.Simulation.solve(
+            self,
+            *args,
+            parameters = {
+                "snes_type": "newtonls",
+                "snes_max_it": 50,
+                "snes_monitor": True,
+                "snes_converged_reason": True,
+                "ksp_type": "preonly", 
+                "pc_type": "lu", 
+                "mat_type": "aij",
+                "pc_factor_mat_solver_type": "mumps"},
+            **kwargs)
+            
+    def run(self, *args, **kwargs):
+        
+        return sapphire.benchmarks.melt_octadecane_in_cavity.Simulation.run(
+            self,
+            *args,
+            solve = self.solve,
+            **kwargs)
+    
+    
+def test__validate__melt_octadecane__without_auto_smoothing__regression():
+    
+    melt_octadecane(
+        Simulation = OctadecaneMeltingSimulationWithoutAutoSmoothing)
+    
+    
 def freeze_water(endtime, s, tau, rx, nx, rt, nt, q, dim = 2, outdir = ""):
     
     mu_l__SI = 8.90e-4  # [Pa s]
