@@ -4,10 +4,10 @@ import sapphire.simulations.convection_coupled_phasechange
 
 def initial_values(sim):
     
-    return fe.interpolate(
-        fe.Expression(
+    return fe.project(
+        fe.Constant(
             (0., 0., 0., sim.cold_wall_temperature.__float__()),
-            element = sim.element),
+            ),
         sim.function_space)
         
         
