@@ -272,7 +272,7 @@ class Simulation(sapphire.simulation.Simulation):
             parameters = {
                 "snes_type": "newtonls",
                 "snes_max_it": 24,
-                "snes_monitor": True,
+                "snes_monitor": None,
                 "snes_converged_reason": False,
                 "ksp_type": "preonly", 
                 "pc_type": "lu", 
